@@ -1,11 +1,19 @@
 package co.edu.corhuila.barbersaas.schedule.application.usecase;
 
 import co.edu.corhuila.barbersaas.schedule.application.port.in.Caller;
+import co.edu.corhuila.barbersaas.schedule.application.port.in.ExceptionUseCases.Filter;
+import co.edu.corhuila.barbersaas.schedule.application.port.in.Page;
 import co.edu.corhuila.barbersaas.schedule.application.port.out.BarbershopDirectory;
+import co.edu.corhuila.barbersaas.schedule.application.port.out.Idempotency;
+import co.edu.corhuila.barbersaas.schedule.application.port.out.ScheduleExceptionRepository;
 import co.edu.corhuila.barbersaas.schedule.application.port.out.WeeklyScheduleRepository;
+import co.edu.corhuila.barbersaas.schedule.domain.model.ScheduleException;
 import co.edu.corhuila.barbersaas.schedule.domain.model.WeeklySchedule;
+import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -54,6 +62,49 @@ final class Fakes {
         @Override
         public ZoneId timezone(Caller caller) {
             return zone;
+        }
+    }
+
+    static final class Exceptions implements ScheduleExceptionRepository {
+        final Map<UUID, ScheduleException> rows = new LinkedHashMap<>();
+        final Map<String, Idempotency.Stored> keys = new HashMap<>();
+
+        @Override
+        public Page<ScheduleException> page(UUID barbershopId, Filter f, Page.Request page) {
+            return Page.of(rows.values().stream()
+                    .filter(e -> e.barbershopId().equals(barbershopId))
+                    .filter(e -> f.barberId() == null || e.barberProfileId().equals(f.barberId()))
+                    .filter(e -> f.from() == null || !e.exceptionDate().isBefore(f.from()))
+                    .filter(e -> f.to() == null || !e.exceptionDate().isAfter(f.to()))
+                    .sorted(Comparator.comparing(ScheduleException::exceptionDate).reversed())
+                    .toList(), page);
+        }
+
+        @Override
+        public Optional<ScheduleException> findById(UUID barbershopId, UUID id) {
+            return Optional.ofNullable(rows.get(id)).filter(e -> e.barbershopId().equals(barbershopId));
+        }
+
+        @Override
+        public Optional<ScheduleException> findOn(UUID barbershopId, UUID barberProfileId, LocalDate date) {
+            return rows.values().stream().filter(e -> e.barbershopId().equals(barbershopId)
+                    && e.barberProfileId().equals(barberProfileId) && e.exceptionDate().equals(date)).findFirst();
+        }
+
+        @Override
+        public Optional<Idempotency.Stored> findKey(String key, String operation) {
+            return Optional.ofNullable(keys.get(operation + " " + key));
+        }
+
+        @Override
+        public void saveNew(ScheduleException e, Idempotency.Key key) {
+            rows.put(e.id(), e);
+            keys.put(key.operation() + " " + key.key(), new Idempotency.Stored(e.id(), key.requestHash()));
+        }
+
+        @Override
+        public void delete(UUID barbershopId, UUID id) {
+            rows.remove(id);
         }
     }
 
