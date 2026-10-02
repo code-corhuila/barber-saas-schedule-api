@@ -23,5 +23,6 @@
 
   <modules>
     <module>schedule-core</module>
+    <module>schedule-adapters</module>
   </modules>
 </project>
