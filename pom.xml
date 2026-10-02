@@ -24,5 +24,6 @@
   <modules>
     <module>schedule-core</module>
     <module>schedule-adapters</module>
+    <module>schedule-app</module>
   </modules>
 </project>
