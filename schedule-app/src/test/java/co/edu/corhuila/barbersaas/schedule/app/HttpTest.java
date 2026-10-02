@@ -23,12 +23,14 @@ import org.springframework.test.web.servlet.MockMvc;
 abstract class HttpTest {
 
     static final KeyPair KEYS = generate();
+    static final BarbershopApiStub BARBERSHOP_API = new BarbershopApiStub();
 
     @Autowired
     MockMvc http;
 
     @DynamicPropertySource
     static void keys(DynamicPropertyRegistry registry) {
+        registry.add("schedule.barbershop-api-url", BARBERSHOP_API::url);
         registry.add("JWT_PUBLIC_KEY", () -> "-----BEGIN PUBLIC KEY-----\n"
                 + Base64.getMimeEncoder().encodeToString(KEYS.getPublic().getEncoded()) + "\n-----END PUBLIC KEY-----");
     }
