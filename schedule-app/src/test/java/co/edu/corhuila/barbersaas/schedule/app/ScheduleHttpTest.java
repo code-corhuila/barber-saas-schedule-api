@@ -87,6 +87,37 @@ class ScheduleHttpTest extends HttpTest {
     }
 
     @Test
+    void a_client_and_the_barber_see_the_same_slots_without_the_ones_others_booked() throws Exception {
+        setWeek();
+        APPOINTMENT_API.book(shop, barber.id(), monday, "08:00", "08:30");
+        String query = "/api/v1/availability?barberId=" + barber.id() + "&serviceId=" + cut.id() + "&date=" + monday;
+
+        String forClient = http.perform(get(query).header("Authorization", bearer("CLIENT", shop)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.slots.length()").value(3))
+                .andExpect(jsonPath("$.slots[0].startTime").value("08:30"))
+                .andReturn().getResponse().getContentAsString();
+        String forBarber = http.perform(get(query).header("Authorization", bearer(barber.userId(), "BARBER", shop)))
+                .andReturn().getResponse().getContentAsString();
+
+        org.junit.jupiter.api.Assertions.assertEquals(forClient, forBarber);
+    }
+
+    @Test
+    void availability_answers_503_when_appointment_does_not_answer() throws Exception {
+        setWeek();
+        APPOINTMENT_API.down = true;
+        try {
+            http.perform(get("/api/v1/availability?barberId=" + barber.id() + "&serviceId=" + cut.id() + "&date=" + monday)
+                            .header("Authorization", bearer("CLIENT", shop)))
+                    .andExpect(status().isServiceUnavailable())
+                    .andExpect(jsonPath("$.error").value("SERVICE_UNAVAILABLE"));
+        } finally {
+            APPOINTMENT_API.down = false;
+        }
+    }
+
+    @Test
     void availability_needs_its_three_parameters_and_hides_another_barbershop() throws Exception {
         http.perform(get("/api/v1/availability?barberId=" + barber.id()).header("Authorization", owner))
                 .andExpect(status().isBadRequest());
