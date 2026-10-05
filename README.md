@@ -49,9 +49,11 @@ barbershop's time zone) has none. The tenant comes **only** from the token; anot
 barber or exception answers `404`.
 
 **Other domains, through their APIs (DEC-SCHED-03, golden rule 8):** the barber, the service's
-duration and the time zone come from `barbershop-api`; the booked appointments from
-`appointment-api`. Each call carries the caller's token and `X-Correlation-Id`, with 2 s to connect
-and 3 s per request; a failure answers `500` instead of a guessed availability.
+duration and the time zone come from `barbershop-api`, with the caller's token; the busy slots from
+`appointment-api`'s `GET /internal/v1/busy-slots`, with **this service's** `SERVICE_TOKEN` and the
+barbershop of the caller's token, so a client and the barber see the same free slots (ADR-015).
+Every call carries `X-Correlation-Id`, with 2 s to connect and 3 s per request; a failure answers
+`503` instead of a guessed availability.
 
 ### How to start it
 
@@ -83,6 +85,3 @@ are also tested against a database migrated by `barber-saas-schedule-db` when `T
 
 - **Clients and OQ-07.** A `CLIENT` token carries no barbershop, so availability answers `403` to
   clients until OQ-07 decides how a client is bound to a barbershop.
-- **Other clients' bookings (OQ-09).** With a `CLIENT` token, `listAppointments` returns only that
-  client's appointments, so slots booked by others would not be subtracted; booking still refuses
-  them (INV-APPT-001). It needs a service token or an internal operation in `appointment-service.yaml`.
