@@ -1,6 +1,5 @@
 package co.edu.corhuila.barbersaas.schedule.adapter.out.http;
 
-import co.edu.corhuila.barbersaas.schedule.application.port.in.Caller;
 import co.edu.corhuila.barbersaas.schedule.application.port.out.Bookings;
 import co.edu.corhuila.barbersaas.schedule.domain.model.TimeSlot;
 import java.time.LocalDate;
@@ -23,7 +22,7 @@ public class NoBookingsYet implements Bookings {
     }
 
     @Override
-    public List<TimeSlot> busy(Caller caller, UUID barberId, LocalDate date) {
+    public List<TimeSlot> busy(UUID barbershopId, UUID barberId, LocalDate date) {
         return List.of();
     }
 }
