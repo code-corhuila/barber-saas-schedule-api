@@ -90,10 +90,11 @@ public class ScheduleConfiguration {
         return new BarbershopApiClient(url);
     }
 
-    /** NoBookingsYet only while appointment-api is not deployed; it warns at startup. */
+    /** Busy slots with this service's own token (ADR-015); NoBookingsYet only without APPOINTMENT_API_URL. */
     @Bean
-    Bookings bookings(@Value("${schedule.appointment-api-url:}") String url) {
-        return url.isBlank() ? new NoBookingsYet() : new AppointmentApiClient(url);
+    Bookings bookings(@Value("${schedule.appointment-api-url:}") String url,
+                      @Value("${schedule.service-token:}") String serviceToken) {
+        return url.isBlank() ? new NoBookingsYet() : new AppointmentApiClient(url, serviceToken);
     }
 
     @Bean
