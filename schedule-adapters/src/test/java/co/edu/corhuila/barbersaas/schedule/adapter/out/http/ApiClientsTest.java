@@ -106,19 +106,35 @@ class ApiClientsTest {
     }
 
     @Test
-    void only_pending_confirmed_and_in_progress_appointments_take_time() {
+    void busy_slots_come_from_the_internal_route_with_this_services_own_token() {
+        UUID shop = UUID.randomUUID();
         UUID barber = UUID.randomUUID();
         LocalDate date = LocalDate.parse("2026-10-05");
-        bodies.put("/api/v1/appointments?barberId=" + barber + "&date=" + date + "&limit=100&page=1", "{\"data\":["
-                + "{\"startTime\":\"08:00\",\"endTime\":\"08:30\",\"status\":\"PENDING\"},"
-                + "{\"startTime\":\"09:00\",\"endTime\":\"09:30\",\"status\":\"CANCELLED\"},"
-                + "{\"startTime\":\"10:00\",\"endTime\":\"10:30\",\"status\":\"IN_PROGRESS\"},"
-                + "{\"startTime\":\"11:00\",\"endTime\":\"11:30\",\"status\":\"COMPLETED\"}],\"meta\":{\"totalPages\":1}}");
+        bodies.put("/internal/v1/busy-slots?barbershopId=" + shop + "&barberId=" + barber + "&date=" + date,
+                "{\"data\":[{\"startTime\":\"08:00\",\"endTime\":\"08:30\"},{\"startTime\":\"10:00\",\"endTime\":\"10:30\"}]}");
+        MDC.put("correlationId", "corr-7");
 
-        List<TimeSlot> busy = new AppointmentApiClient(base).busy(caller, barber, date);
+        List<TimeSlot> busy = new AppointmentApiClient(base, "schedule-service-token").busy(shop, barber, date);
 
         assertEquals(List.of(new TimeSlot(LocalTime.parse("08:00"), LocalTime.parse("08:30")),
                 new TimeSlot(LocalTime.parse("10:00"), LocalTime.parse("10:30"))), busy);
+        assertEquals("Bearer schedule-service-token", seenHeaders.get("Authorization"));
+        assertEquals("corr-7", seenHeaders.get("X-Correlation-Id"));
+    }
+
+    @Test
+    void without_busy_slots_availability_fails_instead_of_guessing() {
+        UUID shop = UUID.randomUUID();
+        UUID barber = UUID.randomUUID();
+        LocalDate date = LocalDate.parse("2026-10-05");
+        bodies.put("/internal/v1/busy-slots?barbershopId=" + shop + "&barberId=" + barber + "&date=" + date, "!403");
+
+        assertThrows(DependencyFailure.class, () -> new AppointmentApiClient(base, "t").busy(shop, barber, date));
+        assertThrows(DependencyFailure.class,
+                () -> new AppointmentApiClient(base, "t").busy(shop, UUID.randomUUID(), date));
+        assertThrows(DependencyFailure.class, () -> new AppointmentApiClient(base, " ").busy(shop, barber, date));
+        assertThrows(DependencyFailure.class,
+                () -> new AppointmentApiClient("http://127.0.0.1:9", "t").busy(shop, barber, date));
     }
 
     @Test
