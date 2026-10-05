@@ -31,5 +31,7 @@ schedule:
     statement-timeout-ms: ${DB_STATEMENT_TIMEOUT_MS:5000}
   # The other domains, always through their APIs (DEC-SCHED-03, golden rule 8).
   barbershop-api-url: ${BARBERSHOP_API_URL:http://barbershop-api:8080}
-  # Empty while barber-saas-appointment-api is not deployed: availability does not subtract bookings.
+  # Empty only to run without appointment-api: availability then does not subtract bookings.
   appointment-api-url: ${APPOINTMENT_API_URL:}
+  # This service's own token (sub: barber-saas-schedule-api) for appointment's busy slots (ADR-015).
+  service-token: ${SERVICE_TOKEN:}
