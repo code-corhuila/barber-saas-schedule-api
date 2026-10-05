@@ -81,8 +81,6 @@ are also tested against a database migrated by `barber-saas-schedule-db` when `T
 
 ### What is missing
 
-- **Bookings.** Until `barber-saas-appointment-api` is part of the platform, `APPOINTMENT_API_URL`
-  is empty and availability does not subtract booked appointments (it warns at startup).
 - **Clients and OQ-07.** A `CLIENT` token carries no barbershop, so availability answers `403` to
   clients until OQ-07 decides how a client is bound to a barbershop.
 - **Other clients' bookings (OQ-09).** With a `CLIENT` token, `listAppointments` returns only that
