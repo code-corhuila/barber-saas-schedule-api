@@ -48,7 +48,8 @@ public class QueryAvailability implements AvailabilityUseCases {
         if (windows.isEmpty()) {
             return new FreeSlots(barberId, serviceId, date, List.of());
         }
-        List<TimeSlot> busy = bookings.busy(caller, barber.id(), date);
+        // The barber was found in the caller's barbershop above; busy slots are asked for that barbershop.
+        List<TimeSlot> busy = bookings.busy(tenant, barber.id(), date);
         return new FreeSlots(barberId, serviceId, date, Availability.free(windows, service.durationMinutes(), busy));
     }
 }
