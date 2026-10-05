@@ -16,7 +16,8 @@ import org.slf4j.MDC;
 /**
  * GET against another domain's API with explicit limits (norm 5.3.10): 2 s to connect, 3 s per
  * request, no retries (a read the user can repeat). It passes on the caller's token, which the
- * other service validates again, and the X-Correlation-Id, so one request is traced across services.
+ * other service validates again, or this service's own token for an internal operation, and the
+ * X-Correlation-Id, so one request is traced across services.
  */
 final class JsonApi {
 
@@ -36,10 +37,15 @@ final class JsonApi {
 
     /** 200: the body. 404: empty (absent, or another barbershop's). Anything else: DependencyFailure. */
     Optional<JsonNode> get(Caller caller, String pathAndQuery) {
+        return get(caller.credential(), pathAndQuery);
+    }
+
+    /** The same with a given bearer token: this service's own, for another service's internal operation. */
+    Optional<JsonNode> get(String token, String pathAndQuery) {
         HttpRequest.Builder request = HttpRequest.newBuilder(URI.create(baseUrl + pathAndQuery))
                 .timeout(REQUEST_TIMEOUT)
                 .header("Accept", "application/json")
-                .header("Authorization", "Bearer " + caller.credential())
+                .header("Authorization", "Bearer " + token)
                 .GET();
         String correlationId = MDC.get("correlationId");
         if (correlationId != null) {
