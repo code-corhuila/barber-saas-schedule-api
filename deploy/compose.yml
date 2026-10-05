@@ -16,6 +16,8 @@ services:
       # The other domains, through their APIs on the platform network (DEC-SCHED-03).
       BARBERSHOP_API_URL: http://barbershop-api:8080
       APPOINTMENT_API_URL: http://appointment-api:8080
+      # This service's own token for appointment's busy slots (ADR-015), never the caller's.
+      SERVICE_TOKEN: ${SCHEDULE_SERVICE_TOKEN:?run barber-saas-infra/scripts/dev-keys.sh}
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8080 && printf \"GET /health HTTP/1.0\r\n\r\n\" >&3 && grep -q ok <&3'"]
       interval: 5s
