@@ -66,11 +66,15 @@ public class ErrorHandler {
         return respond(HttpStatus.METHOD_NOT_ALLOWED, ApiError.of(ApiError.NOT_FOUND, "method not allowed on this route"));
     }
 
-    /** barbershop-api or appointment-api failed or was too slow: logged with the cause, neutral to the client. */
+    /**
+     * barbershop-api or appointment-api failed or was too slow: 503 (ADR-015), logged with the cause,
+     * neutral to the client. Availability is never computed from a guess.
+     */
     @ExceptionHandler(DependencyFailure.class)
     ResponseEntity<ApiError> dependency(DependencyFailure e) {
         log.error("dependency failed: {}", e.getMessage());
-        return respond(HttpStatus.INTERNAL_SERVER_ERROR, ApiError.of(ApiError.INTERNAL_ERROR, "unexpected error"));
+        return respond(HttpStatus.SERVICE_UNAVAILABLE,
+                ApiError.of(ApiError.SERVICE_UNAVAILABLE, "a service this answer needs is not available, try again"));
     }
 
     /** Logged in full (the MDC adds the correlation id); the client gets a neutral text. */
