@@ -33,8 +33,12 @@ class QueryAvailabilityTest {
     private final Fakes.Schedules schedules = new Fakes.Schedules();
     private final Fakes.Exceptions exceptions = new Fakes.Exceptions();
     private final List<TimeSlot> booked = new ArrayList<>();
+    private final List<UUID> askedFor = new ArrayList<>();
     private final QueryAvailability useCase = new QueryAvailability(schedules, exceptions, directory,
-            (caller, barber, date) -> booked, CLOCK);
+            (barbershopId, barber, date) -> {
+                askedFor.add(barbershopId);
+                return booked;
+            }, CLOCK);
 
     private final UUID shop = UUID.randomUUID();
     private final Barber barber = directory.addBarber(shop, UUID.randomUUID());
@@ -58,6 +62,18 @@ class QueryAvailabilityTest {
 
         assertEquals(List.of(slot("08:00", "08:30"), slot("09:00", "09:30"), slot("14:00", "14:30"),
                 slot("14:30", "15:00")), useCase.free(client, barber.id(), cut.id(), MONDAY).slots());
+    }
+
+    @Test
+    void every_role_sees_the_same_free_slots_asked_with_the_barbershop_of_the_token() {
+        booked.add(slot("08:00", "08:30"));
+        Caller barberCaller = new Caller(barber.userId().toString(), Role.BARBER, shop, "t");
+
+        List<TimeSlot> forClient = useCase.free(client, barber.id(), cut.id(), MONDAY).slots();
+
+        assertEquals(forClient, useCase.free(barberCaller, barber.id(), cut.id(), MONDAY).slots());
+        assertEquals(forClient, useCase.free(owner, barber.id(), cut.id(), MONDAY).slots());
+        assertEquals(List.of(shop, shop, shop), askedFor);
     }
 
     @Test
