@@ -57,12 +57,12 @@ Every call carries `X-Correlation-Id`, with 2 s to connect and 3 s per request; 
 
 ### How to start it
 
-As part of the platform: `./scripts/up.sh dev` in `barber-saas-infra` (it needs `barbershop-api`).
+As part of the platform: `./scripts/up.sh dev` in `barber-saas-infra-postgres` (it needs `barbershop-api`).
 Alone, without a database (in-memory repositories), pointing at a running `barbershop-api`:
 
 ```bash
 mvn -B -DskipTests package
-JWT_PUBLIC_KEY="$(cat ../barber-saas-infra/keys/jwt-public.pem)" BARBERSHOP_API_URL=http://localhost:8081 \
+JWT_PUBLIC_KEY="$(cat ../barber-saas-infra-postgres/keys/jwt-public.pem)" BARBERSHOP_API_URL=http://localhost:8081 \
   java -jar schedule-app/target/schedule-app-0.1.0.jar
 ```
 
