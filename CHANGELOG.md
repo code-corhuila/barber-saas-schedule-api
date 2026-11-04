@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-11-05
+
+User stories: code-corhuila/barber-saas-docs#122
+
+No changes since 2.0.0: released together with the rest of MVP 3.
+
 ## [2.0.0] - 2026-10-08
 
 User stories: code-corhuila/barber-saas-docs#4, code-corhuila/barber-saas-docs#59
@@ -97,4 +103,5 @@ User stories: code-corhuila/barber-saas-docs#4, code-corhuila/barber-saas-docs#5
 - **env:** list every variable without real values
 - use the new repository name barber-saas-infra-postgres
 
+[3.0.0]: https://github.com/code-corhuila/barber-saas-schedule-api/releases/tag/v3.0.0
 [2.0.0]: https://github.com/code-corhuila/barber-saas-schedule-api/releases/tag/v2.0.0
