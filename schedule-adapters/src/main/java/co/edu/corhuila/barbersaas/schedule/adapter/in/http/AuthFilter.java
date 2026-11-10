@@ -40,15 +40,16 @@ public class AuthFilter extends OncePerRequestFilter {
             reject(response, "a bearer token is required");
             return;
         }
+        // barber-saas-docs#164: the routes of the app take only user tokens issued for the app
+        // (aud barber-saas-app); service tokens are only for /internal/v1/**, so a copied service token
+        // cannot act on an owner's agenda.
         Caller caller;
         try {
-            caller = verifier.verify(header.substring(7), Instant.now());
+            caller = verifier.verifyForApp(header.substring(7), Instant.now());
         } catch (Rs256Verifier.InvalidTokenException e) {
             reject(response, "the token is invalid or has expired");
             return;
         }
-        // barber-saas-docs#164: service tokens are only for /internal/v1/**; the routes of the app take
-        // user tokens, so a copied service token cannot act on an owner's agenda.
         if (caller.is(Caller.Role.SERVICE)) {
             reject(response, "service tokens are only accepted on internal routes");
             return;
